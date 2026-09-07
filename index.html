@@ -7,79 +7,95 @@
 <meta name="theme-color" content="#14352a"/>
 <title>Barnnote</title>
 <style>
-:root{--ink:#1c1916;--muted:#5c675f;--line:#d7ddd6;--paper:#f4efe6;--card:#fffcf7;--sage:#3f6b52;--header:#14352a}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,sans-serif;padding-bottom:80px}
-header{background:var(--header);color:#e8f0ea;padding:14px 16px}h1{margin:0;font-size:20px}.sub{opacity:.75;font-size:12px}
-main{max-width:720px;margin:auto;padding:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px}
+:root{--ink:#1c1916;--muted:#5c675f;--line:#d7ddd6;--paper:#f4efe6;--card:#fffcf7;--sage:#3f6b52;--header:#14352a;--sage2:#2d5240;--radius:16px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{padding-bottom:88px}
+header.app{position:sticky;top:0;z-index:20;background:var(--header);color:#e8f0ea;padding:12px 16px}
+h1{margin:0;font-size:20px}.sub{font-size:11px;opacity:.75;margin:4px 0 0}
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:0 0 14px}
+h2{font-size:17px;margin:0 0 10px}
 label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
-input,select,textarea{width:100%;border:1px solid #cfd6ce;border-radius:12px;padding:11px;font:inherit}
-textarea{min-height:110px}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-button{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:600;background:#e8eee8}
-button.p{background:var(--sage);color:#fff}button:disabled{opacity:.45}
-.warn{background:#fbf3e3;padding:10px;border-radius:12px;font-size:13px;margin:8px 0}
-.note{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
-.hidden{display:none}.timer{font-size:28px;text-align:center}audio{width:100%}
+input,select,textarea{width:100%;border:1px solid #cfd6ce;border-radius:12px;padding:11px;font:inherit;background:#fff}
+textarea{min-height:120px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button{font:inherit;border:0;border-radius:12px;padding:11px 14px;font-weight:600;background:#e8eee8}
+button.primary{background:var(--sage);color:#fff}button.dark{background:var(--header);color:#fff}button.ghost{background:transparent;border:1px solid var(--line)}button:disabled{opacity:.45}
+.seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:#fff}.seg button.on{background:var(--sage);color:#fff;border-color:var(--sage)}
+.timer{font-size:28px;text-align:center}
+.warn{background:#fbf3e3;border:1px solid #ead7b0;color:#5c430f;padding:10px;border-radius:12px;font-size:13px;margin:10px 0}
+.ok{background:#e7f0ea;border:1px solid #c3d7cb;padding:10px;border-radius:12px;font-size:13px}
+.flag{font-size:13px;padding:8px 10px;border-radius:10px;margin:6px 0;border:1px solid #ead7b0;background:#fbf3e3}
+.note-out{white-space:pre-wrap;font-size:14.5px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.anchor{font-size:12px;color:var(--muted);border-left:3px solid var(--sage);padding:6px 10px;margin:6px 0;background:#f3f7f4}
+.steps{display:flex;gap:4px;margin:0 0 14px;overflow:auto}.steps span{font-size:11px;padding:6px 8px;border-radius:999px;background:#e8eee8;white-space:nowrap}.steps span.on{background:var(--header);color:#fff}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px}.dock button{flex:1}
+audio{width:100%;margin-top:8px}.muted{color:var(--muted);font-size:13px}.hidden{display:none}
+.kicker{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sage2);margin:0 0 6px}
+.list-item{border-bottom:1px solid var(--line);padding:10px 0}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><h1>Barnnote</h1><p class="sub">Safari · draft until signed</p></header>
+<header class="app"><h1>Barnnote</h1><p class="sub">Safari · audio + text · draft until signed</p></header>
 <main>
-<section class="card" id="s1">
-<label><input type="checkbox" id="consent"> Owner/agent consented to recording</label>
-<div class="btns"><button class="p" id="go1">Continue</button></div>
+<div class="steps" id="steps"></div>
+<section class="card" id="s-consent">
+<p class="kicker">Before the mic</p><h2>Recording consent</h2>
+<label><input type="checkbox" id="consentBox"> Owner/agent consented</label>
+<div class="btns"><button class="primary" id="btnConsent">Continue</button></div>
 </section>
-<section class="card hidden" id="s2">
-<label>Horse</label><input id="horse" placeholder="Boo Blackwell">
-<label>Provider</label><select id="provider"><option>SC</option><option>WD</option><option>JJ</option></select>
-<label>Location</label><select id="location"><option>Wellington</option><option>Lox</option><option>Clinic</option></select>
-<div class="btns"><button class="p" id="go2">Go to recording</button></div>
+<section class="card hidden" id="s-patient">
+<p class="kicker">Encounter</p><h2>Patient & billing</h2>
+<label>Horse name</label><input id="horse" placeholder="Boo Blackwell">
+<div class="row"><div><label>Breed / age</label><input id="breed"></div><div><label>Owner</label><input id="owner"></div></div>
+<div class="row"><div><label>Provider</label><select id="provider"><option>SC</option><option>WD</option><option>JJ</option><option>Other</option></select></div><div><label>Location</label><select id="location"><option>Wellington</option><option>Lox</option><option>LW</option><option>Clinic</option></select></div></div>
+<div class="row"><div><label>Level</label><select id="level"><option>M</option><option>L</option><option>H</option></select></div><div><label>Visit</label><select id="visitType"><option>Lameness exam</option><option>Recheck</option><option>Joint injection</option><option>Emergency</option></select></div></div>
+<label>Barn trip</label>
+<div class="seg" id="btSeg"><button type="button" data-v="None">None</button><button type="button" data-v="BT" class="on">BT</button><button type="button" data-v="BTS">BTS</button></div>
+<div class="btns"><button class="primary" id="btnToRecord">Go to recording</button></div>
 </section>
-<section class="card hidden" id="s3">
-<p class="warn">Allow the microphone, or add a Voice Memo file.</p>
+<section class="card hidden" id="s-record">
+<p class="kicker">Capture</p><h2>Record the exam</h2>
+<p class="muted">Open in Safari. Allow the mic, or add a Voice Memo.</p>
+<div class="warn" id="recHint">Start recording, or add a voice file.</div>
 <div class="timer" id="timer">00:00</div>
-<input type="file" id="file" accept="audio/*,.m4a,.mp3,.wav,.caf">
-<div class="btns"><button class="p" id="rec">Start recording</button><button id="stop" disabled>Stop</button></div>
+<p id="recState" class="muted">No audio yet</p>
+<label>Add voice file</label>
+<input type="file" id="fileAudio" accept="audio/*,video/*,.m4a,.mp3,.wav,.caf,.mp4">
+<div class="btns"><button class="primary" id="btnRec">Start recording</button><button id="btnStop" disabled>Stop</button></div>
 <audio id="player" controls class="hidden"></audio>
-<div class="btns"><button class="p" id="go3" disabled>Use this recording</button></div>
+<div id="audioMeta" class="muted"></div>
+<div class="btns"><button class="primary" id="btnToTranscript" disabled>Use this recording</button></div>
 </section>
-<section class="card hidden" id="s4">
-<p class="warn">Fix names and drugs. Generate uses this text plus the recording.</p>
-<textarea id="tx" placeholder="Transcript"></textarea>
-<div class="btns"><button class="p" id="gen">Generate note</button></div>
+<section class="card hidden" id="s-transcript">
+<p class="kicker">Transcript</p><h2>Review text</h2>
+<p class="warn">Fix names and drugs. Generate uses this text plus the recording map.</p>
+<textarea id="transcript" placeholder="Live caption appears here. You can also type or paste."></textarea>
+<p class="muted" id="sttNote"></p>
+<div class="btns"><button class="ghost" id="btnLive">Live caption</button><button class="primary" id="btnGenerate">Generate note (audio + text)</button></div>
 </section>
-<section class="card hidden" id="s5">
-<div class="note" id="out" contenteditable="true"></div>
-<div class="btns"><button id="copy">Copy</button><button class="p" id="again">New note</button></div>
+<section class="card hidden" id="s-note">
+<p class="kicker">Draft</p><h2>Structured note</h2>
+<div id="flags"></div>
+<div class="note-out" id="noteOut" contenteditable="true"></div>
+<h2>Source anchors</h2><div id="anchors"></div>
+<h2>Owner recap</h2><div class="note-out" id="ownerOut" contenteditable="true"></div>
+<div class="btns"><button id="btnCopy">Copy</button><button id="btnCsv">CSV</button><button class="dark" id="btnSign">Sign & lock</button></div>
 </section>
+<section class="card hidden" id="s-vault">
+<p class="kicker">Vault</p><h2>Signed notes on this phone</h2>
+<div id="vaultList" class="muted">Empty</div>
+<div class="btns"><button class="ghost" id="btnNew">New encounter</button></div>
+</section>
+<section class="card">
+<p class="kicker">Optional</p><h2>Gemini audio-in</h2>
+<p class="muted">Paste a Google AI Studio key if you want the cloud to hear the file. Needed for true transcription of an uploaded memo.</p>
+<input id="geminiKey" type="password" placeholder="AIza… optional">
+<p class="muted" id="gemStatus">No key — local engine.</p>
+</section>
+<section class="card"><p class="kicker">Audit</p><h2>This encounter</h2><div id="audit" class="muted">No events yet.</div></section>
 </main>
-<script>
-const $=id=>document.getElementById(id);
-const hide=id=>$('s'+id).classList.add('hidden');
-const show=id=>$('s'+id).classList.remove('hidden');
-let rec,chunks=[],blob,t0,timer,dur=0;
-$('go1').onclick=()=>{if(!$('consent').checked){alert('Check consent');return}hide(1);show(2)};
-$('go2').onclick=()=>{if(!$('horse').value.trim()){alert('Horse name required');return}hide(2);show(3)};
-function fmt(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-$('rec').onclick=async()=>{
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    chunks=[];
-    const mime=MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';
-    rec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
-    rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
-    rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());blob=new Blob(chunks,{type:rec.mimeType||'audio/mp4'});const u=URL.createObjectURL(blob);$('player').src=u;$('player').classList.remove('hidden');$('go3').disabled=false};
-    rec.start(250);t0=Date.now();$('rec').disabled=true;$('stop').disabled=false;
-    timer=setInterval(()=>{dur=Date.now()-t0;$('timer').textContent=fmt(dur)},200);
-  }catch(e){alert(e.message)}
-};
-$('stop').onclick=()=>{if(rec&&rec.state!=='inactive')rec.stop();clearInterval(timer);$('rec').disabled=false;$('stop').disabled=true};
-$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;blob=f;$('player').src=URL.createObjectURL(f);$('player').classList.remove('hidden');$('go3').disabled=false};
-$('go3').onclick=()=>{hide(3);show(4)};
-$('gen').onclick=()=>{
-  const tx=$('tx').value.trim()||'[add what you heard]';
-  $('out').textContent=['BARNNOTE DRAFT','Patient: '+$('horse').value,'Provider: '+$('provider').value,'Location: '+$('location').value,'Audio: '+fmt(dur)+(blob?' · recording attached':' · no file'),'','SUBJECTIVE / HISTORY',tx,'','PLAN','Recheck as discussed. This is a draft until signed.'].join('\n');
-  hide(4);show(5);
-};
-$('copy').onclick=()=>{navigator.clipboard.writeText($('out').textContent);alert('Copied')};
-$('again').onclick=()=>location.reload();
-</script>
+<div class="dock"><button class="ghost" id="dockVault">Vault</button><button class="primary" id="dockNew">New note</button></div>
+<script src="barnnote-a.js"></script>
+<script src="barnnote-b.js"></script>
 </body></html>
