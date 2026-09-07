@@ -1,1 +1,85 @@
-<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Barnnote</title></head><body><p>Loading full app next. Open this repo after index is published.</p></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#14352a"/>
+<title>Barnnote</title>
+<style>
+:root{--ink:#1c1916;--muted:#5c675f;--line:#d7ddd6;--paper:#f4efe6;--card:#fffcf7;--sage:#3f6b52;--header:#14352a}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,sans-serif;padding-bottom:80px}
+header{background:var(--header);color:#e8f0ea;padding:14px 16px}h1{margin:0;font-size:20px}.sub{opacity:.75;font-size:12px}
+main{max-width:720px;margin:auto;padding:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px}
+label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid #cfd6ce;border-radius:12px;padding:11px;font:inherit}
+textarea{min-height:110px}.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:600;background:#e8eee8}
+button.p{background:var(--sage);color:#fff}button:disabled{opacity:.45}
+.warn{background:#fbf3e3;padding:10px;border-radius:12px;font-size:13px;margin:8px 0}
+.note{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.hidden{display:none}.timer{font-size:28px;text-align:center}audio{width:100%}
+</style></head>
+<body>
+<header><h1>Barnnote</h1><p class="sub">Safari · draft until signed</p></header>
+<main>
+<section class="card" id="s1">
+<label><input type="checkbox" id="consent"> Owner/agent consented to recording</label>
+<div class="btns"><button class="p" id="go1">Continue</button></div>
+</section>
+<section class="card hidden" id="s2">
+<label>Horse</label><input id="horse" placeholder="Boo Blackwell">
+<label>Provider</label><select id="provider"><option>SC</option><option>WD</option><option>JJ</option></select>
+<label>Location</label><select id="location"><option>Wellington</option><option>Lox</option><option>Clinic</option></select>
+<div class="btns"><button class="p" id="go2">Go to recording</button></div>
+</section>
+<section class="card hidden" id="s3">
+<p class="warn">Allow the microphone, or add a Voice Memo file.</p>
+<div class="timer" id="timer">00:00</div>
+<input type="file" id="file" accept="audio/*,.m4a,.mp3,.wav,.caf">
+<div class="btns"><button class="p" id="rec">Start recording</button><button id="stop" disabled>Stop</button></div>
+<audio id="player" controls class="hidden"></audio>
+<div class="btns"><button class="p" id="go3" disabled>Use this recording</button></div>
+</section>
+<section class="card hidden" id="s4">
+<p class="warn">Fix names and drugs. Generate uses this text plus the recording.</p>
+<textarea id="tx" placeholder="Transcript"></textarea>
+<div class="btns"><button class="p" id="gen">Generate note</button></div>
+</section>
+<section class="card hidden" id="s5">
+<div class="note" id="out" contenteditable="true"></div>
+<div class="btns"><button id="copy">Copy</button><button class="p" id="again">New note</button></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const hide=id=>$('s'+id).classList.add('hidden');
+const show=id=>$('s'+id).classList.remove('hidden');
+let rec,chunks=[],blob,t0,timer,dur=0;
+$('go1').onclick=()=>{if(!$('consent').checked){alert('Check consent');return}hide(1);show(2)};
+$('go2').onclick=()=>{if(!$('horse').value.trim()){alert('Horse name required');return}hide(2);show(3)};
+function fmt(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+$('rec').onclick=async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[];
+    const mime=MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';
+    rec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+    rec.onstop=()=>{stream.getTracks().forEach(t=>t.stop());blob=new Blob(chunks,{type:rec.mimeType||'audio/mp4'});const u=URL.createObjectURL(blob);$('player').src=u;$('player').classList.remove('hidden');$('go3').disabled=false};
+    rec.start(250);t0=Date.now();$('rec').disabled=true;$('stop').disabled=false;
+    timer=setInterval(()=>{dur=Date.now()-t0;$('timer').textContent=fmt(dur)},200);
+  }catch(e){alert(e.message)}
+};
+$('stop').onclick=()=>{if(rec&&rec.state!=='inactive')rec.stop();clearInterval(timer);$('rec').disabled=false;$('stop').disabled=true};
+$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;blob=f;$('player').src=URL.createObjectURL(f);$('player').classList.remove('hidden');$('go3').disabled=false};
+$('go3').onclick=()=>{hide(3);show(4)};
+$('gen').onclick=()=>{
+  const tx=$('tx').value.trim()||'[add what you heard]';
+  $('out').textContent=['BARNNOTE DRAFT','Patient: '+$('horse').value,'Provider: '+$('provider').value,'Location: '+$('location').value,'Audio: '+fmt(dur)+(blob?' · recording attached':' · no file'),'','SUBJECTIVE / HISTORY',tx,'','PLAN','Recheck as discussed. This is a draft until signed.'].join('\n');
+  hide(4);show(5);
+};
+$('copy').onclick=()=>{navigator.clipboard.writeText($('out').textContent);alert('Copied')};
+$('again').onclick=()=>location.reload();
+</script>
+</body></html>
